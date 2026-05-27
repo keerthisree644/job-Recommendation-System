@@ -1,0 +1,173 @@
+@startuml DeploymentDiagram
+title Job Recommendation System - Deployment/Infrastructure Diagram
+
+node "Client Layer" {
+    component [Web Browser] as web_browser
+    component [Mobile App\n(iOS/Android)] as mobile_app
+    component [Desktop App] as desktop_app
+}
+
+node "CDN & Static Content" {
+    component [CloudFront/CloudFlare] as cdn
+}
+
+node "Cloud Infrastructure (AWS/GCP/Azure)" {
+    node "Load Balancing & API Gateway" {
+        component [Application Load Balancer] as alb
+        component [API Gateway\n(Rate Limiting, Auth)] as api_gateway
+    }
+
+    node "Compute Services" {
+        node "Kubernetes Cluster" {
+            component [API Server Pods\n(Node.js/Spring Boot)] as api_pods
+            component [Recommendation Engine Pods\n(Python)] as rec_pods
+            component [User Service Pods] as user_pods
+            component [Job Service Pods] as job_pods
+            component [Application Service Pods] as app_pods
+            component [Notification Service Pods] as notif_pods
+        }
+    }
+
+    node "Message Queue & Caching" {
+        component [Kafka/RabbitMQ Cluster] as message_queue
+        component [Redis Cluster\n(Caching & Sessions)] as redis_cache
+    }
+
+    node "Database Layer" {
+        component [PostgreSQL\n(Primary - Write)] as postgres_primary
+        component [PostgreSQL\n(Replica - Read)] as postgres_replica
+        component [MongoDB\n(NoSQL for Logs)] as mongodb
+        component [Elasticsearch\n(Job Search Index)] as elasticsearch
+    }
+
+    node "Storage Services" {
+        component [S3/Cloud Storage\n(Resumes, Images)] as cloud_storage
+        component [DynamoDB\n(User Sessions)] as dynamodb
+    }
+
+    node "Background Jobs" {
+        component [Scheduled Tasks\n(Analytics, Reports)] as scheduler
+        component [Job Worker Pool] as workers
+    }
+
+    node "Monitoring & Logging" {
+        component [CloudWatch/Stackdriver\n(Logs & Metrics)] as monitoring
+        component [Prometheus\n(Metrics Collection)] as prometheus
+        component [Grafana\n(Dashboards)] as grafana
+        component [ELK Stack\n(Log Aggregation)] as elk_stack
+    }
+}
+
+node "Security Layer" {
+    component [WAF\n(Web Application Firewall)] as waf
+    component [VPC\n(Virtual Private Cloud)] as vpc
+    component [SSL/TLS Certificates] as ssl
+    component [Secrets Manager] as secrets_manager
+}
+
+node "CI/CD Pipeline" {
+    component [GitHub/GitLab\n(Source Control)] as git_repo
+    component [GitHub Actions/Jenkins\n(Build & Test)] as ci_cd
+    component [Docker Registry] as docker_registry
+    component [Artifact Repository] as artifacts
+}
+
+node "External Services" {
+    component [Email Service\n(SendGrid/SES)] as email_service
+    component [SMS Service\n(Twilio)] as sms_service
+    component [Push Notification\n(Firebase/APNs)] as push_service
+    component [Analytics Service\n(Google Analytics)] as analytics_service
+}
+
+' Client connections
+web_browser --> cdn
+web_browser --> alb
+mobile_app --> alb
+desktop_app --> alb
+
+' CDN to ALB
+cdn --> alb
+
+' Load balancing
+alb --> api_gateway
+api_gateway --> waf
+
+' WAF routing
+waf --> vpc
+
+' Service routing in K8s
+vpc --> api_pods
+vpc --> rec_pods
+vpc --> user_pods
+vpc --> job_pods
+vpc --> app_pods
+vpc --> notif_pods
+
+' Compute to Data Layer
+api_pods --> postgres_primary
+api_pods --> redis_cache
+api_pods --> message_queue
+
+rec_pods --> postgres_replica
+rec_pods --> elasticsearch
+rec_pods --> redis_cache
+
+user_pods --> postgres_primary
+user_pods --> redis_cache
+
+job_pods --> postgres_primary
+job_pods --> elasticsearch
+
+app_pods --> postgres_primary
+app_pods --> message_queue
+
+notif_pods --> message_queue
+notif_pods --> dynamodb
+
+' Background jobs
+message_queue --> scheduler
+message_queue --> workers
+
+' Storage
+api_pods --> cloud_storage
+user_pods --> cloud_storage
+app_pods --> cloud_storage
+
+' Database replication
+postgres_primary --> postgres_replica
+
+' Monitoring
+api_pods --> monitoring
+rec_pods --> monitoring
+notif_pods --> monitoring
+
+monitoring --> prometheus
+prometheus --> grafana
+
+api_pods --> elk_stack
+notif_pods --> elk_stack
+
+' Notifications
+notif_pods --> email_service
+notif_pods --> sms_service
+notif_pods --> push_service
+
+' Analytics
+api_pods --> analytics_service
+
+' CI/CD
+git_repo --> ci_cd
+ci_cd --> docker_registry
+docker_registry --> api_pods
+docker_registry --> rec_pods
+docker_registry --> workers
+
+' Secrets
+api_pods -.-> secrets_manager
+rec_pods -.-> secrets_manager
+notif_pods -.-> secrets_manager
+
+' SSL
+alb -.-> ssl
+
+@enduml
