@@ -1,0 +1,105 @@
+@startuml SequenceDiagram
+title Job Recommendation System - Sequence Diagram: Job Recommendation Flow
+
+actor JobSeeker as js
+participant "Frontend UI" as ui
+participant "API Gateway" as api
+participant "Authentication Service" as auth
+participant "User Service" as us
+participant "Recommendation Engine" as re
+participant "Matching Algorithm" as ma
+participant "Scoring System" as ss
+participant "Job Repository" as jr
+participant "Notification Service" as ns
+database "Database" as db
+
+autonumber
+
+js -> ui: Request Job Recommendations
+activate ui
+
+ui -> api: GET /recommendations
+activate api
+
+api -> auth: Validate User Token
+activate auth
+auth -> db: Verify Session
+db --> auth: Token Valid
+auth --> api: Token Valid
+deactivate auth
+
+api -> us: Get User Profile & Preferences
+activate us
+us -> db: Fetch JobSeeker Data
+db --> us: Return User & Preferences
+us --> api: User Object
+deactivate us
+
+api -> re: Generate Recommendations
+activate re
+
+re -> jr: Fetch All Available Jobs
+activate jr
+jr -> db: Query Jobs
+db --> jr: Return Job List
+jr --> re: Job List
+deactivate jr
+
+re -> re: Filter by Basic Criteria
+note right of re: Location, Job Type, etc.
+
+loop For Each Matching Job
+    re -> ma: Calculate Skill Match
+    activate ma
+    ma -> ma: Compare Skills
+    ma --> re: Skill Match Score
+    deactivate ma
+    
+    re -> ma: Calculate Location Match
+    activate ma
+    ma --> re: Location Match Score
+    deactivate ma
+    
+    re -> ma: Calculate Salary Match
+    activate ma
+    ma --> re: Salary Match Score
+    deactivate ma
+    
+    re -> ma: Calculate Experience Match
+    activate ma
+    ma --> re: Experience Match Score
+    deactivate ma
+    
+    re -> ss: Calculate Overall Score
+    activate ss
+    ss -> ss: Apply Weights to Factors
+    ss --> re: Final Match Score
+    deactivate ss
+end
+
+re -> ss: Rank Jobs by Score
+activate ss
+ss -> ss: Sort Jobs Descending
+ss --> re: Ranked Job List
+deactivate ss
+
+re -> re: Select Top N Results
+re --> api: Recommendation List
+deactivate re
+
+api -> ns: Send Notification
+activate ns
+ns -> db: Create Notification Record
+ns --> ns: Queue Email/Push Notification
+ns --> api: Notification Sent
+deactivate ns
+
+api --> ui: Return Recommendations (JSON)
+deactivate api
+
+ui --> js: Display Recommended Jobs
+note right of ui: Show job cards with match percentage
+
+deactivate ui
+
+@enduml
