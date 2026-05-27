@@ -1,0 +1,218 @@
+@startuml ClassDiagram
+title Job Recommendation System - Class Diagram
+
+package "User Management" {
+    class User {
+        - userId: String
+        - name: String
+        - email: String
+        - password: String
+        - createdAt: DateTime
+        - updatedAt: DateTime
+        + login(): boolean
+        + updateProfile(): void
+        + logout(): void
+    }
+
+    class JobSeeker extends User {
+        - resume: String
+        - skills: List<String>
+        - experience: Integer
+        - preferredLocation: String
+        - salary Range: SalaryRange
+        - jobPreferences: JobPreferences
+        + viewRecommendations(): List<Job>
+        + applyForJob(jobId): Application
+        + updateSkills(skills): void
+    }
+
+    class Recruiter extends User {
+        - companyId: String
+        - department: String
+        - postsJob(jobDetails): Job
+        + viewApplications(): List<Application>
+        + updateJobListing(): void
+        + filterCandidates(): List<JobSeeker>
+    }
+}
+
+package "Job Management" {
+    class Job {
+        - jobId: String
+        - title: String
+        - description: String
+        - requiredSkills: List<String>
+        - salary: SalaryRange
+        - location: String
+        - jobType: JobType
+        - postedDate: DateTime
+        - deadline: DateTime
+        - recruiter: Recruiter
+        + getDetails(): String
+        + updateListing(): void
+        + closeListing(): void
+    }
+
+    class JobPreferences {
+        - preferredJobTypes: List<JobType>
+        - desiredSalary: SalaryRange
+        - locations: List<String>
+        - requiredSkills: List<String>
+        - industryPreferences: List<String>
+        + matches(job): double
+    }
+
+    class SalaryRange {
+        - minimum: Double
+        - maximum: Double
+        - currency: String
+        + isWithinRange(salary): boolean
+    }
+
+    enum JobType {
+        FULL_TIME
+        PART_TIME
+        CONTRACT
+        INTERNSHIP
+        FREELANCE
+    }
+}
+
+package "Application Management" {
+    class Application {
+        - applicationId: String
+        - jobSeeker: JobSeeker
+        - job: Job
+        - appliedDate: DateTime
+        - status: ApplicationStatus
+        - coverLetter: String
+        + submitApplication(): void
+        + withdrawApplication(): void
+        + updateStatus(status): void
+    }
+
+    enum ApplicationStatus {
+        SUBMITTED
+        UNDER_REVIEW
+        SHORTLISTED
+        REJECTED
+        ACCEPTED
+    }
+}
+
+package "Recommendation Engine" {
+    class RecommendationEngine {
+        - matchingAlgorithm: MatchingAlgorithm
+        - scoringSystem: ScoringSystem
+        + generateRecommendations(jobSeeker): List<Job>
+        + rankJobs(jobs, preferences): List<Job>
+        + calculateMatchScore(jobSeeker, job): double
+    }
+
+    interface MatchingAlgorithm {
+        + calculateSkillMatch(skills1, skills2): double
+        + calculateLocationMatch(pref, job): double
+        + calculateSalaryMatch(pref, job): double
+        + calculateExperienceMatch(exp, required): double
+    }
+
+    class SkillBasedMatcher implements MatchingAlgorithm {
+        + calculateSkillMatch(skills1, skills2): double
+        + calculateLocationMatch(pref, job): double
+        + calculateSalaryMatch(pref, job): double
+        + calculateExperienceMatch(exp, required): double
+    }
+
+    class ScoringSystem {
+        - weights: Map<String, Double>
+        + calculateScore(factors): double
+        + updateWeights(weights): void
+        + getTopMatches(jobs, count): List<Job>
+    }
+}
+
+package "Notification System" {
+    class NotificationService {
+        - notificationQueue: Queue<Notification>
+        + sendNotification(user, message): void
+        + sendJobRecommendation(jobSeeker, job): void
+        + sendApplicationUpdate(user, status): void
+        + sendNewJobAlert(jobSeeker, job): void
+    }
+
+    class Notification {
+        - notificationId: String
+        - user: User
+        - message: String
+        - type: NotificationType
+        - createdAt: DateTime
+        - isRead: boolean
+        + markAsRead(): void
+    }
+
+    enum NotificationType {
+        JOB_RECOMMENDATION
+        APPLICATION_UPDATE
+        NEW_JOB_ALERT
+        MESSAGE
+        PROFILE_COMPLETION
+    }
+}
+
+package "Database & Analytics" {
+    class JobRepository {
+        + findById(jobId): Job
+        + findAll(): List<Job>
+        + findByTitle(title): List<Job>
+        + findByLocation(location): List<Job>
+        + save(job): void
+        + delete(jobId): void
+    }
+
+    class UserRepository {
+        + findById(userId): User
+        + findByEmail(email): User
+        + save(user): void
+        + delete(userId): void
+        + findAllSeekers(): List<JobSeeker>
+    }
+
+    class ApplicationRepository {
+        + findById(applicationId): Application
+        + findByJobSeeker(seekerId): List<Application>
+        + findByJob(jobId): List<Application>
+        + save(application): void
+        + updateStatus(applicationId, status): void
+    }
+
+    class Analytics {
+        - jobRepository: JobRepository
+        - applicationRepository: ApplicationRepository
+        + getRecommendationSuccessRate(): double
+        + getPopularSkills(): List<String>
+        + getJobTrends(): Map<String, Integer>
+        + getUserEngagementMetrics(): Map<String, Double>
+    }
+}
+
+' Relationships
+User "1" -- "*" Notification : receives
+JobSeeker "1" -- "*" Application : submits
+Recruiter "1" -- "*" Job : posts
+Job "1" -- "*" Application : has
+JobSeeker "1" -- "1" JobPreferences : has
+Job -- SalaryRange : defines
+Job -- JobType : has
+Application -- ApplicationStatus : has
+RecommendationEngine -- MatchingAlgorithm : uses
+RecommendationEngine -- ScoringSystem : uses
+SkillBasedMatcher -- MatchingAlgorithm : implements
+NotificationService -- Notification : sends
+Notification -- NotificationType : has
+JobRepository -- Job : manages
+UserRepository -- User : manages
+ApplicationRepository -- Application : manages
+Analytics -- JobRepository : uses
+Analytics -- ApplicationRepository : uses
+
+@enduml
