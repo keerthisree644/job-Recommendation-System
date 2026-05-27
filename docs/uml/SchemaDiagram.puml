@@ -1,0 +1,270 @@
+@startuml SchemaDiagram
+title Job Recommendation System - Database Schema Diagram
+
+entity Users {
+    *user_id : UUID <<PK>>
+    --
+    email : String <<UNIQUE>>
+    password_hash : String
+    first_name : String
+    last_name : String
+    user_type : Enum(JobSeeker, Recruiter, Admin)
+    profile_picture_url : String
+    created_at : Timestamp
+    updated_at : Timestamp
+    is_active : Boolean
+}
+
+entity JobSeekers {
+    *seeker_id : UUID <<PK>>
+    --
+    user_id : UUID <<FK>>
+    resume_url : String
+    years_of_experience : Integer
+    current_location : String
+    willing_to_relocate : Boolean
+    notice_period : Integer
+    created_at : Timestamp
+    updated_at : Timestamp
+}
+
+entity Recruiters {
+    *recruiter_id : UUID <<PK>>
+    --
+    user_id : UUID <<FK>>
+    company_id : UUID <<FK>>
+    department : String
+    phone : String
+    office_address : String
+    created_at : Timestamp
+    updated_at : Timestamp
+}
+
+entity Companies {
+    *company_id : UUID <<PK>>
+    --
+    name : String <<UNIQUE>>
+    industry : String
+    company_size : Enum(Startup, Small, Medium, Large, Enterprise)
+    founded_year : Integer
+    headquarters_location : String
+    website_url : String
+    logo_url : String
+    description : Text
+    created_at : Timestamp
+    updated_at : Timestamp
+}
+
+entity Skills {
+    *skill_id : UUID <<PK>>
+    --
+    name : String <<UNIQUE>>
+    category : String
+    description : Text
+    proficiency_levels : Array<String>
+    created_at : Timestamp
+}
+
+entity JobSeekerSkills {
+    *seeker_skill_id : UUID <<PK>>
+    --
+    seeker_id : UUID <<FK>>
+    skill_id : UUID <<FK>>
+    proficiency_level : Enum(Beginner, Intermediate, Advanced, Expert)
+    years_of_experience : Integer
+    last_used_date : Date
+    created_at : Timestamp
+    updated_at : Timestamp
+}
+
+entity JobPreferences {
+    *preference_id : UUID <<PK>>
+    --
+    seeker_id : UUID <<FK>>
+    min_salary : Decimal
+    max_salary : Decimal
+    currency : String(3)
+    preferred_job_types : Array<String>
+    preferred_locations : Array<String>
+    willing_to_travel : Boolean
+    remote_work_preference : Enum(Remote, Hybrid, Onsite, Any)
+    industries : Array<String>
+    company_sizes : Array<String>
+    created_at : Timestamp
+    updated_at : Timestamp
+}
+
+entity Jobs {
+    *job_id : UUID <<PK>>
+    --
+    recruiter_id : UUID <<FK>>
+    company_id : UUID <<FK>>
+    title : String
+    description : Text
+    job_type : Enum(FullTime, PartTime, Contract, Internship, Freelance)
+    seniority_level : Enum(Entry, Junior, Mid, Senior, Lead, Executive)
+    min_salary : Decimal
+    max_salary : Decimal
+    currency : String(3)
+    location : String
+    remote_work_option : Enum(Remote, Hybrid, Onsite)
+    required_experience_years : Integer
+    posted_date : Timestamp
+    application_deadline : Date
+    is_active : Boolean
+    status : Enum(Draft, Published, Closed, Archived)
+    views_count : Integer
+    applications_count : Integer
+    created_at : Timestamp
+    updated_at : Timestamp
+}
+
+entity JobRequirements {
+    *requirement_id : UUID <<PK>>
+    --
+    job_id : UUID <<FK>>
+    skill_id : UUID <<FK>>
+    proficiency_level : Enum(Beginner, Intermediate, Advanced, Expert)
+    is_mandatory : Boolean
+    weight : Decimal
+    created_at : Timestamp
+}
+
+entity Applications {
+    *application_id : UUID <<PK>>
+    --
+    seeker_id : UUID <<FK>>
+    job_id : UUID <<FK>>
+    status : Enum(Submitted, Under_Review, Shortlisted, Rejected, Accepted, Withdrawn)
+    cover_letter : Text
+    resume_url : String
+    submitted_date : Timestamp
+    reviewed_date : Timestamp
+    decision_date : Timestamp
+    interview_date : Timestamp
+    notes : Text
+    created_at : Timestamp
+    updated_at : Timestamp
+}
+
+entity Recommendations {
+    *recommendation_id : UUID <<PK>>
+    --
+    seeker_id : UUID <<FK>>
+    job_id : UUID <<FK>>
+    match_score : Decimal(5,2)
+    skill_match_score : Decimal(5,2)
+    location_match_score : Decimal(5,2)
+    salary_match_score : Decimal(5,2)
+    experience_match_score : Decimal(5,2)
+    other_factors_score : Decimal(5,2)
+    recommendation_date : Timestamp
+    was_applied : Boolean
+    created_at : Timestamp
+}
+
+entity Notifications {
+    *notification_id : UUID <<PK>>
+    --
+    user_id : UUID <<FK>>
+    notification_type : Enum(JobRecommendation, ApplicationUpdate, NewJobAlert, Message, ProfileCompletion)
+    title : String
+    message : Text
+    related_job_id : UUID
+    related_application_id : UUID
+    is_read : Boolean
+    read_date : Timestamp
+    notification_channel : Enum(Email, SMS, Push, InApp)
+    sent_date : Timestamp
+    created_at : Timestamp
+}
+
+entity SavedJobs {
+    *saved_job_id : UUID <<PK>>
+    --
+    seeker_id : UUID <<FK>>
+    job_id : UUID <<FK>>
+    saved_date : Timestamp
+    is_active : Boolean
+    created_at : Timestamp
+}
+
+entity Messages {
+    *message_id : UUID <<PK>>
+    --
+    sender_id : UUID <<FK>>
+    receiver_id : UUID <<FK>>
+    subject : String
+    content : Text
+    is_read : Boolean
+    read_date : Timestamp
+    related_job_id : UUID
+    related_application_id : UUID
+    sent_date : Timestamp
+    created_at : Timestamp
+}
+
+entity InterviewSchedules {
+    *interview_id : UUID <<PK>>
+    --
+    application_id : UUID <<FK>>
+    recruiter_id : UUID <<FK>>
+    seeker_id : UUID <<FK>>
+    interview_type : Enum(Phone, Video, InPerson, Group, Technical, HR)
+    scheduled_date : Timestamp
+    duration_minutes : Integer
+    location : String
+    meeting_link : String
+    status : Enum(Scheduled, Completed, Rescheduled, Cancelled)
+    interviewer_notes : Text
+    interview_rating : Decimal(5,2)
+    created_at : Timestamp
+    updated_at : Timestamp
+}
+
+entity Analytics {
+    *analytics_id : UUID <<PK>>
+    --
+    date : Date
+    job_id : UUID <<FK>>
+    recruiter_id : UUID <<FK>>
+    total_applications : Integer
+    qualified_applications : Integer
+    interview_invitations : Integer
+    job_views : Integer
+    avg_match_score : Decimal(5,2)
+    created_at : Timestamp
+}
+
+' Relationships
+Users "1" -- "*" JobSeekers : creates
+Users "1" -- "*" Recruiters : creates
+Users "1" -- "*" Notifications : receives
+Users "1" -- "*" Messages : sends/receives
+
+JobSeekers "1" -- "*" JobSeekerSkills : has
+JobSeekers "1" -- "1" JobPreferences : defines
+JobSeekers "1" -- "*" Applications : submits
+JobSeekers "1" -- "*" SavedJobs : saves
+JobSeekers "1" -- "*" Recommendations : gets
+JobSeekers "1" -- "*" InterviewSchedules : participates
+
+Recruiters "1" -- "*" Jobs : posts
+Recruiters "1" -- "*" InterviewSchedules : conducts
+
+Companies "1" -- "*" Recruiters : employs
+Companies "1" -- "*" Jobs : lists
+
+Skills "*" -- "*" JobSeekerSkills : links
+Skills "*" -- "*" JobRequirements : requires
+
+Jobs "1" -- "*" JobRequirements : specifies
+Jobs "1" -- "*" Applications : receives
+Jobs "1" -- "*" Recommendations : recommended_to
+Jobs "1" -- "*" SavedJobs : bookmarked_by
+Jobs "1" -- "*" Analytics : tracked
+
+Applications "1" -- "*" InterviewSchedules : schedules
+Applications "1" -- "*" Messages : discusses
+
+@enduml
