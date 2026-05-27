@@ -1,0 +1,117 @@
+@startuml UseCaseDiagram
+title Job Recommendation System - Use Case Diagram
+
+left to right direction
+
+actor JobSeeker
+actor Recruiter
+actor SystemAdmin
+
+rectangle "Job Recommendation System" {
+    
+    ' Job Seeker Use Cases
+    usecase UC1 as "Register Account"
+    usecase UC2 as "Login"
+    usecase UC3 as "View Profile"
+    usecase UC4 as "Update Profile"
+    usecase UC5 as "Add Skills"
+    usecase UC6 as "Set Job Preferences"
+    usecase UC7 as "View Recommendations"
+    usecase UC8 as "Search Jobs"
+    usecase UC9 as "View Job Details"
+    usecase UC10 as "Apply for Job"
+    usecase UC11 as "Track Applications"
+    usecase UC12 as "Receive Notifications"
+    usecase UC13 as "Save Job Listings"
+    usecase UC14 as "Withdraw Application"
+    usecase UC15 as "View Application Status"
+    
+    ' Recruiter Use Cases
+    usecase UC16 as "Recruiter Register"
+    usecase UC17 as "Post Job Listing"
+    usecase UC18 as "Edit Job Listing"
+    usecase UC19 as "View Applications"
+    usecase UC20 as "Filter Candidates"
+    usecase UC21 as "Review Resume"
+    usecase UC22 as "Send Messages"
+    usecase UC23 as "Update Application Status"
+    usecase UC24 as "Close Job Listing"
+    usecase UC25 as "View Candidate Pool"
+    
+    ' System Use Cases
+    usecase UC26 as "Generate Recommendations"
+    usecase UC27 as "Calculate Match Score"
+    usecase UC28 as "Rank Jobs"
+    usecase UC29 as "Send Notifications"
+    usecase UC30 as "Analyze Trends"
+    usecase UC31 as "Maintain Database"
+    usecase UC32 as "Generate Reports"
+    usecase UC33 as "Update Algorithm Weights"
+    
+    ' Admin Use Cases
+    usecase UC34 as "Manage Users"
+    usecase UC35 as "Monitor System"
+    usecase UC36 as "Configure Settings"
+    usecase UC37 as "View Analytics"
+}
+
+' Job Seeker associations
+JobSeeker --> UC1
+JobSeeker --> UC2
+JobSeeker --> UC3
+JobSeeker --> UC4
+JobSeeker --> UC5
+JobSeeker --> UC6
+JobSeeker --> UC7
+JobSeeker --> UC8
+JobSeeker --> UC9
+JobSeeker --> UC10
+JobSeeker --> UC11
+JobSeeker --> UC12
+JobSeeker --> UC13
+JobSeeker --> UC14
+JobSeeker --> UC15
+
+' Recruiter associations
+Recruiter --> UC16
+Recruiter --> UC17
+Recruiter --> UC18
+Recruiter --> UC19
+Recruiter --> UC20
+Recruiter --> UC21
+Recruiter --> UC22
+Recruiter --> UC23
+Recruiter --> UC24
+Recruiter --> UC25
+
+' System Admin associations
+SystemAdmin --> UC34
+SystemAdmin --> UC35
+SystemAdmin --> UC36
+SystemAdmin --> UC37
+
+' Include relationships
+UC7 .> UC26 : <<include>>
+UC7 .> UC27 : <<include>>
+UC7 .> UC28 : <<include>>
+UC10 .> UC29 : <<include>>
+UC23 .> UC29 : <<include>>
+UC12 .> UC29 : <<include>>
+UC4 .> UC5 : <<include>>
+UC4 .> UC6 : <<include>>
+UC8 .> UC28 : <<include>>
+UC19 .> UC20 : <<include>>
+
+' Extend relationships
+UC15 .> UC12 : <<extend>>
+UC23 .> UC12 : <<extend>>
+
+' System associations
+UC26 -.-> UC27
+UC26 -.-> UC28
+UC26 -.-> UC30
+UC30 -.-> UC32
+UC33 -.-> UC26
+UC31 -.-> UC26
+
+@enduml
